@@ -1,10 +1,14 @@
 package com.santi.jaime.TA;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.Inet4Address;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
@@ -16,8 +20,10 @@ import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
+import com.amazonaws.services.sqs.model.SendMessageResult;
 
 public class ServerApp {
 
@@ -107,30 +113,35 @@ public class ServerApp {
 
 			// We create the message to the user and insert it on outbox queue.
 
-			SendMessageRequest message_out = new SendMessageRequest(sqsOutbox, "Max:" + max + " Min:" + min + " Prod:" + prod + " Sum:" + sum);
-			sqs.sendMessage(message_out);
+			String messagebody = "Max:" + max + " Min:" + min + " Prod:" + prod + " Sum:" + sum;
+			SendMessageRequest message_out = new SendMessageRequest(sqsOutbox, messagebody);
+			SendMessageResult message_result = sqs.sendMessage(message_out);
 
-			ReceiveMessageRequest sentMessageRequest = new ReceiveMessageRequest(sqsOutbox);
-			Message message_sent = sqs.receiveMessage(receiveMessageRequest).getMessages().get(0);
-
-			File logfile = new File(new Date() + "_log.txt");
+			System.out.println("Creating file...");
+			File logfile = new File(new Date().getTime() + "_log.txt");
 			PrintWriter logfilepw = new PrintWriter(logfile);
 
+			URL whatismyip = new URL("http://169.254.169.254/latest/meta-data/hostname");
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+			                whatismyip.openStream()));
+
+			String ip = in.readLine();
+			
+			
+			logfilepw.println("    Timestamp:     " + new Date());
+			logfilepw.println("    IP:     " + ip);;
+			logfilepw.println();
 			logfilepw.println("  MessageIn");
 			logfilepw.println("    MessageId:     " + messages.get(0).getMessageId());
-			logfilepw.println("    ReceiptHandle: " + messages.get(0).getReceiptHandle());
-			logfilepw.println("    MD5OfBody:     " + messages.get(0).getMD5OfBody());
-			logfilepw.println("    Timestamp:     " + messages.get(0).getAttributes().get("SentTimestamp"));
 			logfilepw.println("    Body:          " + messages.get(0).getBody());
 			logfilepw.println();
 			logfilepw.println("  MessageOut");
-			logfilepw.println("    MessageId:     " + message_sent.getMessageId());
-			logfilepw.println("    ReceiptHandle: " + message_sent.getReceiptHandle());
-			logfilepw.println("    MD5OfBody:     " + message_sent.getMD5OfBody());
-			logfilepw.println("    Timestamp:     " + message_sent.getAttributes().get("SentTimestamp"));
-			logfilepw.println("    Body:          " + message_sent.getBody());
+			logfilepw.println("    MessageId:     " + message_result.getMessageId());
+			logfilepw.println("    Body:          " + messagebody);
 			logfilepw.flush();
 			logfilepw.close();
+			System.out.println("File created!");
+
 
 		}
 
