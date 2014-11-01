@@ -52,10 +52,11 @@ public class ServerApp {
 		boolean exists = false;
 		String sqsInbox = "";
 		for (String queueUrl : sqs.listQueues().getQueueUrls()) {
-			if (queueUrl.equals("g3-inbox")) {
+			String [] pieces = queueUrl.split("/");
+			if (pieces[pieces.length-1].equals("g3-inbox")) {
 				exists = true;
 				sqsInbox = queueUrl;
-				System.out.println("Queue caught, beginning work!");
+				System.out.println("Inbox queue found");
 				break;
 			}
 		}
@@ -103,9 +104,11 @@ public class ServerApp {
 			exists = false;
 			String sqsOutbox = "";
 			for (String queueUrl : sqs.listQueues().getQueueUrls()) {
-				if (queueUrl.equals("g3-outbox")) {
+				String [] pieces = queueUrl.split("/");
+				if (pieces[pieces.length-1].equals("g3-outbox")) {
 					exists = true;
 					sqsOutbox = queueUrl;
+					System.out.println("Outbox queue found");
 					break;
 				}
 			}
