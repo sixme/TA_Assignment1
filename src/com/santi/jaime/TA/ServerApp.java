@@ -90,6 +90,8 @@ public class ServerApp {
 			Integer max = iNumbers[0];
 			Integer sum = iNumbers[0];
 			Integer prod = iNumbers[0];
+			Double sum_squares = Math.pow(iNumbers[0], 2);
+			
 			for (int i = 1; i < iNumbers.length; i++) {
 				if (iNumbers[i] < min)
 					min = iNumbers[i];
@@ -98,6 +100,8 @@ public class ServerApp {
 
 				sum += iNumbers[i];
 				prod *= iNumbers[i];
+				
+				sum_squares += Math.pow(iNumbers[i], 2);
 			}
 
 			// Now we attemp to send the response, first of all we check if the outbox queue is already created
@@ -120,7 +124,7 @@ public class ServerApp {
 
 			// We create the message to the user and insert it on outbox queue.
 
-			String messagebody = "Max:" + max + " Min:" + min + " Prod:" + prod + " Sum:" + sum;
+			String messagebody = "Max:" + max + " Min:" + min + " Prod:" + prod + " Sum:" + sum + " Sum_squares: " + sum_squares;
 			SendMessageRequest message_out = new SendMessageRequest(sqsOutbox, messagebody);
 			SendMessageResult message_result = sqs.sendMessage(message_out);
 
